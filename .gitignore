@@ -10,3 +10,10 @@ dist/
 
 .vercel
 .env*
+
+# Roblox / Rojo local artifacts
+roblox/*.rbxl
+roblox/*.rbxlx
+roblox/*.rbxm
+roblox/*.rbxmx
+
