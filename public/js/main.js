@@ -11,6 +11,11 @@ const screens = {
   results: document.getElementById("screen-results"),
 };
 
+const MENU_SCREENS = new Set(["title", "freeplay", "options", "credits", "results"]);
+
+const menuVideoWrap = document.getElementById("menu-video-wrap");
+const menuVideo = document.getElementById("menu-video");
+
 const audio = new AudioEngine();
 const canvas = document.getElementById("game-canvas");
 const game = new RhythmGame(canvas, audio);
@@ -29,10 +34,41 @@ const state = {
   },
 };
 
+/** Mute + loop menu BG; play on menu screens, pause/hide in gameplay */
+function setMenuVideoActive(active) {
+  document.body.classList.toggle("menu-bg-on", active);
+  menuVideoWrap.classList.toggle("hidden", !active);
+  if (!menuVideo) return;
+  menuVideo.muted = true;
+  menuVideo.defaultMuted = true;
+  menuVideo.volume = 0;
+  menuVideo.loop = true;
+  if (active) {
+    const play = () => {
+      menuVideo.play().catch(() => {
+        /* autoplay blocked until gesture — retry on first click */
+      });
+    };
+    play();
+  } else {
+    menuVideo.pause();
+  }
+}
+
+function ensureMenuVideoUnlocked() {
+  if (!menuVideo) return;
+  menuVideo.muted = true;
+  menuVideo.volume = 0;
+  if (MENU_SCREENS.has(state.screen) && menuVideo.paused) {
+    menuVideo.play().catch(() => {});
+  }
+}
+
 function show(name) {
   Object.values(screens).forEach((el) => el.classList.remove("active"));
   screens[name].classList.add("active");
   state.screen = name;
+  setMenuVideoActive(MENU_SCREENS.has(name));
 }
 
 function loadSettings() {
@@ -177,13 +213,16 @@ async function resumeGame() {
   await game.resume();
 }
 
-// Clicks
+// Clicks + unlock muted autoplay after first gesture if needed
 document.body.addEventListener("click", (e) => {
+  ensureMenuVideoUnlocked();
   const btn = e.target.closest("[data-action]");
   if (!btn) return;
   const action = btn.dataset.action;
   handleAction(action);
 });
+
+document.body.addEventListener("keydown", () => ensureMenuVideoUnlocked(), { once: false });
 
 function handleAction(action) {
   switch (action) {
@@ -265,3 +304,18 @@ loadSettings();
 wireOptions();
 updateTitleMenu();
 buildFreeplay();
+
+// Force mute + start looping menu BG on load
+if (menuVideo) {
+  menuVideo.muted = true;
+  menuVideo.defaultMuted = true;
+  menuVideo.setAttribute("muted", "");
+  menuVideo.volume = 0;
+  menuVideo.loop = true;
+  // Some browsers still emit audio unless we hard-mute on load/metadata
+  menuVideo.addEventListener("loadeddata", () => {
+    menuVideo.muted = true;
+    menuVideo.volume = 0;
+  });
+}
+setMenuVideoActive(true);

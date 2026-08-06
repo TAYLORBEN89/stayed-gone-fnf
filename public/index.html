@@ -12,6 +12,20 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
+  <!-- Looping menu BG (muted) — hidden during gameplay -->
+  <div id="menu-video-wrap" aria-hidden="true">
+    <video
+      id="menu-video"
+      src="assets/kano_cat_menu_video.mp4"
+      muted
+      loop
+      playsinline
+      autoplay
+      preload="auto"
+    ></video>
+    <div id="menu-video-dim"></div>
+  </div>
+
   <div id="crt" aria-hidden="true"></div>
   <div id="scanlines" aria-hidden="true"></div>
 

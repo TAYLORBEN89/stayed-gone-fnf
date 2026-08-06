@@ -41,6 +41,46 @@ body {
   place-items: center;
 }
 
+/* Full-screen looping menu background video */
+#menu-video-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--bg);
+  transition: opacity 0.4s ease;
+}
+
+#menu-video-wrap.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+#menu-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  /* slight zoom so edges never show letterbox on odd aspect ratios */
+  transform: scale(1.04);
+}
+
+#menu-video-dim {
+  position: absolute;
+  inset: 0;
+  /* darken so title + buttons stay readable */
+  background:
+    linear-gradient(180deg, rgba(5, 5, 12, 0.55) 0%, rgba(5, 5, 12, 0.72) 45%, rgba(5, 5, 12, 0.85) 100%),
+    radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.45) 100%);
+}
+
+body.menu-bg-on {
+  background: #000;
+}
+
 #crt {
   position: fixed;
   inset: 0;
@@ -77,6 +117,30 @@ body {
   padding: 2rem 1rem;
   position: relative;
   z-index: 1;
+}
+
+/* Readable UI over video */
+#screen-title .title-glow,
+#screen-title .hint,
+.panel-title,
+.credits-body {
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9), 0 0 24px rgba(0, 0, 0, 0.6);
+}
+
+#screen-title .menu-btn,
+#screen-options .menu-btn,
+#screen-credits .menu-btn,
+.results-actions .menu-btn {
+  background: linear-gradient(180deg, rgba(22, 22, 42, 0.88) 0%, rgba(12, 12, 22, 0.92) 100%);
+  backdrop-filter: blur(6px);
+}
+
+.options-panel,
+.song-list li,
+.results-body,
+.credits-body {
+  background: rgba(16, 16, 28, 0.88);
+  backdrop-filter: blur(8px);
 }
 
 .screen.active {
