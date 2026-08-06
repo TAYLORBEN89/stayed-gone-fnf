@@ -1,0 +1,14 @@
+{
+  "name": "stayed-gone-fnf",
+  "version": "1.0.0",
+  "description": "Stayed Gone — Vox vs Alastor FNF-style rhythm game (browser)",
+  "private": true,
+  "scripts": {
+    "dev": "npx --yes serve public -l 3000",
+    "start": "npx --yes serve public -l 3000",
+    "build": "echo 'Static site — nothing to build'"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0a0a12" />
+  <meta name="description" content="Stayed Gone — Vox vs Alastor. A browser Friday Night Funkin'-style rhythm game." />
+  <title>STAYED GONE — Vox vs Alastor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Share+Tech+Mono&family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="crt" aria-hidden="true"></div>
+  <div id="scanlines" aria-hidden="true"></div>
+
+  <!-- TITLE -->
+  <section id="screen-title" class="screen active">
+    <div class="title-glow">
+      <p class="eyebrow">HAZBIN · RHYTHM DUEL</p>
+      <h1 class="glitch" data-text="STAYED GONE">STAYED GONE</h1>
+      <p class="subtitle">VOX <span class="vs">VS</span> ALASTOR</p>
+    </div>
+    <nav class="menu" role="menu">
+      <button class="menu-btn" data-action="play" role="menuitem">▶ STORY</button>
+      <button class="menu-btn" data-action="freeplay" role="menuitem">♪ FREEPLAY</button>
+      <button class="menu-btn" data-action="options" role="menuitem">⚙ OPTIONS</button>
+      <button class="menu-btn" data-action="credits" role="menuitem">★ CREDITS</button>
+    </nav>
+    <p class="hint">Arrow keys / WASD · Enter to select · Esc back</p>
+  </section>
+
+  <!-- FREEPLAY -->
+  <section id="screen-freeplay" class="screen">
+    <h2 class="panel-title">FREEPLAY</h2>
+    <ul id="song-list" class="song-list"></ul>
+    <p class="hint">↑↓ select · Enter play · Esc back</p>
+  </section>
+
+  <!-- OPTIONS -->
+  <section id="screen-options" class="screen">
+    <h2 class="panel-title">OPTIONS</h2>
+    <div class="options-panel">
+      <label class="opt">
+        <span>Scroll speed</span>
+        <input type="range" id="opt-speed" min="1" max="4" step="0.1" value="2.2" />
+        <span id="opt-speed-val">2.2</span>
+      </label>
+      <label class="opt">
+        <span>Offset (ms)</span>
+        <input type="range" id="opt-offset" min="-150" max="150" step="5" value="0" />
+        <span id="opt-offset-val">0</span>
+      </label>
+      <label class="opt">
+        <span>Volume</span>
+        <input type="range" id="opt-volume" min="0" max="1" step="0.05" value="0.7" />
+        <span id="opt-volume-val">70%</span>
+      </label>
+      <label class="opt check">
+        <input type="checkbox" id="opt-downscroll" />
+        <span>Downscroll</span>
+      </label>
+      <label class="opt check">
+        <input type="checkbox" id="opt-botplay" />
+        <span>Botplay</span>
+      </label>
+    </div>
+    <button class="menu-btn" data-action="back">← BACK</button>
+  </section>
+
+  <!-- CREDITS -->
+  <section id="screen-credits" class="screen">
+    <h2 class="panel-title">CREDITS</h2>
+    <div class="credits-body">
+      <p><strong>Stayed Gone</strong> — browser FNF-style build</p>
+      <p>Inspired by Hazbin Hotel &amp; Friday Night Funkin'</p>
+      <p class="muted">Original song &amp; characters © their respective owners.<br />This is a fan project — no official affiliation.</p>
+      <p>Engine · custom HTML5 · deploy on Vercel</p>
+    </div>
+    <button class="menu-btn" data-action="back">← BACK</button>
+  </section>
+
+  <!-- COUNTDOWN / GAME -->
+  <section id="screen-game" class="screen">
+    <div id="hud">
+      <div class="hud-side opponent">
+        <span class="name alastor">ALASTOR</span>
+        <span class="role">Radio Demon</span>
+      </div>
+      <div class="hud-center">
+        <div id="health-bar"><div id="health-fill"></div></div>
+        <div id="score-line">Score: 0 · Combo: 0 · Misses: 0</div>
+        <div id="judgement"></div>
+      </div>
+      <div class="hud-side player">
+        <span class="name vox">VOX</span>
+        <span class="role">Media Overlord</span>
+      </div>
+    </div>
+    <canvas id="game-canvas" width="1280" height="720"></canvas>
+    <div id="countdown"></div>
+    <div id="pause-overlay" class="hidden">
+      <p>PAUSED</p>
+      <button class="menu-btn" data-action="resume">RESUME</button>
+      <button class="menu-btn" data-action="retry">RETRY</button>
+      <button class="menu-btn" data-action="quit">QUIT</button>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="screen-results" class="screen">
+    <h2 class="panel-title" id="results-title">RESULTS</h2>
+    <div id="results-body" class="results-body"></div>
+    <div class="results-actions">
+      <button class="menu-btn" data-action="retry">RETRY</button>
+      <button class="menu-btn" data-action="menu">MENU</button>
+    </div>
+  </section>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
