@@ -7,3 +7,6 @@ Thumbs.db
 .env.*
 dist/
 .cache/
+
+.vercel
+.env*
