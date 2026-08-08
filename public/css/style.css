@@ -71,10 +71,10 @@ body {
 #menu-video-dim {
   position: absolute;
   inset: 0;
-  /* darken so title + buttons stay readable */
+  /* light dim only — keep video bright; UI uses its own text-shadow */
   background:
-    linear-gradient(180deg, rgba(5, 5, 12, 0.55) 0%, rgba(5, 5, 12, 0.72) 45%, rgba(5, 5, 12, 0.85) 100%),
-    radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.45) 100%);
+    linear-gradient(180deg, rgba(5, 5, 12, 0.18) 0%, rgba(5, 5, 12, 0.28) 50%, rgba(5, 5, 12, 0.42) 100%),
+    radial-gradient(ellipse at center, transparent 45%, rgba(0, 0, 0, 0.18) 100%);
 }
 
 body.menu-bg-on {
@@ -154,6 +154,135 @@ body.menu-bg-on {
 }
 
 /* TITLE */
+/* Character select */
+#screen-chars {
+  justify-content: flex-start;
+  padding-top: 4vh;
+}
+
+.char-row {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 1.5rem 0 1rem;
+  max-width: 960px;
+}
+
+.char-card {
+  width: 200px;
+  background: rgba(8, 8, 16, 0.55);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s, box-shadow 0.15s;
+  text-align: center;
+}
+
+.char-card:hover:not(.locked),
+.char-card.selected {
+  transform: translateY(-4px) scale(1.03);
+  border-color: var(--accent, #ff6b35);
+  box-shadow: 0 0 24px rgba(255, 107, 53, 0.35);
+}
+
+.char-card.locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.7);
+}
+
+.char-card img,
+.char-card .char-placeholder {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: contain;
+  background: #050508;
+  border-radius: 10px;
+  display: block;
+}
+
+.char-card .char-placeholder {
+  display: grid;
+  place-items: center;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-family: "Share Tech Mono", monospace;
+}
+
+.char-card .char-name {
+  margin-top: 0.65rem;
+  font-family: "Black Ops One", sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.06em;
+}
+
+.char-card .char-role {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  font-family: "Share Tech Mono", monospace;
+}
+
+.char-preview-wrap {
+  margin: 0.5rem auto 1rem;
+  max-width: 280px;
+  text-align: center;
+}
+
+.char-preview-wrap img {
+  width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.5));
+}
+
+.char-preview-hint {
+  font-size: 0.7rem;
+  opacity: 0.75;
+  margin-top: 0.4rem;
+  font-family: "Share Tech Mono", monospace;
+}
+
+/* In-game character behind notes (player side) */
+#game-char-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+#game-char-player {
+  position: absolute;
+  right: 4%;
+  bottom: 8%;
+  height: min(58vh, 480px);
+  width: auto;
+  max-width: 42%;
+  object-fit: contain;
+  object-position: bottom center;
+  opacity: 0.92;
+  filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.55));
+  transition: opacity 0.08s ease;
+  z-index: 1;
+}
+
+#screen-game {
+  position: relative;
+}
+
+#screen-game #game-canvas {
+  position: relative;
+  z-index: 2;
+}
+
+#screen-game #hud,
+#screen-game #countdown,
+#screen-game #pause-overlay {
+  z-index: 3;
+}
+
 .title-glow {
   text-align: center;
   margin-bottom: 0.5rem;
@@ -185,6 +314,12 @@ h1.glitch {
   margin-top: 0.75rem;
   font-size: clamp(1rem, 3vw, 1.5rem);
   letter-spacing: 0.3em;
+  color: #f4f4fc;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.9), 0 0 3px #000;
+}
+
+.eyebrow {
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95);
 }
 
 .subtitle .vs {

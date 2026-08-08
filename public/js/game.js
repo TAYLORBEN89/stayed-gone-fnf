@@ -1,6 +1,8 @@
+import { LANE_TO_DIR } from "./characters.js";
+
 const LANE_COLORS = ["#c44dff", "#4d9fff", "#4dff7a", "#ff4d6a"];
 const LANE_KEYS = {
-  // Player lanes 0-3
+  // Player lanes 0-3  (left, down, up, right)
   ArrowLeft: 0,
   ArrowDown: 1,
   ArrowUp: 2,
@@ -55,10 +57,24 @@ export class RhythmGame {
     this.raf = null;
     this.onEnd = null;
     this.onHud = null;
+    this.onPose = null; // (dirName: string|null) => void — for character sprite
+    this.character = null;
+    this.charAssets = null;
+    this.poseDir = null; // "left"|"down"|"up"|"right"|null idle
+    this.poseTimer = 0;
+    this._charCanvas = document.getElementById("game-char-player");
+    this._charCtx = this._charCanvas ? this._charCanvas.getContext("2d") : null;
     this._boundKeyDown = (e) => this._keyDown(e);
     this._boundKeyUp = (e) => this._keyUp(e);
     this._resize();
     window.addEventListener("resize", () => this._resize());
+  }
+
+  setCharacter(char, assets) {
+    this.character = char;
+    this.charAssets = assets || null;
+    this.poseDir = null;
+    this._drawCharacterPose(null);
   }
 
   _resize() {
@@ -140,6 +156,7 @@ export class RhythmGame {
     e.preventDefault();
     this.held[lane] = true;
     this.flash[lane] = 1;
+    this._setPose(LANE_TO_DIR[lane]);
     if (!this.options.botplay) this._tryHit(lane);
   }
 
@@ -147,6 +164,54 @@ export class RhythmGame {
     const lane = LANE_KEYS[e.key];
     if (lane === undefined) return;
     this.held[lane] = false;
+    // If no keys held, return to idle shortly
+    if (!this.held.some(Boolean)) {
+      this.poseTimer = 0.12;
+    }
+  }
+
+  _setPose(dir) {
+    this.poseDir = dir;
+    this.poseTimer = 0.35;
+    this._drawCharacterPose(dir);
+    if (this.onPose) this.onPose(dir);
+  }
+
+  _drawCharacterPose(dir) {
+    const canvas = this._charCanvas;
+    const ctx = this._charCtx;
+    if (!canvas || !ctx) return;
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const assets = this.charAssets;
+    const char = this.character;
+    if (!char || !assets) return;
+
+    // Prefer sheet frame for the pressed direction; idle uses select art
+    if (dir && assets.sheetImg && char.sheet?.frames?.[dir]) {
+      const fr = char.sheet.frames[dir];
+      const img = assets.sheetImg;
+      // fit frame into canvas preserving aspect
+      const scale = Math.min(w / fr.sw, h / fr.sh) * 0.95;
+      const dw = fr.sw * scale;
+      const dh = fr.sh * scale;
+      const dx = (w - dw) / 2;
+      const dy = h - dh;
+      ctx.drawImage(img, fr.sx, fr.sy, fr.sw, fr.sh, dx, dy, dw, dh);
+      return;
+    }
+
+    if (assets.selectImg) {
+      const img = assets.selectImg;
+      const scale = Math.min(w / img.naturalWidth, h / img.naturalHeight) * 0.95;
+      const dw = img.naturalWidth * scale;
+      const dh = img.naturalHeight * scale;
+      const dx = (w - dw) / 2;
+      const dy = h - dh;
+      ctx.drawImage(img, dx, dy, dw, dh);
+    }
   }
 
   _tryHit(lane) {
@@ -183,6 +248,7 @@ export class RhythmGame {
     this.judgementClass = j;
     this.judgementTimer = 0.5;
     this.audio.hit(j);
+    // Keep pose on successful hits from botplay too
     this._emitHud();
   }
 
@@ -229,6 +295,14 @@ export class RhythmGame {
 
   _update() {
     const t = this.songTime + this.options.offset;
+    // Pose hold timer → idle
+    if (this.poseTimer > 0) {
+      this.poseTimer -= 1 / 60;
+      if (this.poseTimer <= 0 && !this.held.some(Boolean)) {
+        this.poseDir = null;
+        this._drawCharacterPose(null);
+      }
+    }
     const speed = this.options.speed;
 
     // Botplay
@@ -238,6 +312,7 @@ export class RhythmGame {
           n.hit = true;
           n.judged = true;
           this.flash[n.lane] = 1;
+          this._setPose(LANE_TO_DIR[n.lane]);
           this._registerHit("sick");
         }
       }
@@ -397,7 +472,8 @@ export class RhythmGame {
     ctx.textAlign = "center";
     ctx.fillText("KROSS", w * 0.28, 48);
     ctx.fillStyle = "rgba(0,220,255,0.7)";
-    ctx.fillText("KAIN  ·  ←↓↑→ or WASD", w * 0.72, 48);
+    const pName = this.character?.name || "KOAL";
+    ctx.fillText(`${pName}  ·  ←↓↑→ or WASD`, w * 0.72, 48);
   }
 
   _roundRect(x, y, w, h, r) {

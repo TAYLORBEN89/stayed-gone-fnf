@@ -1,9 +1,11 @@
 import { SONGS } from "./charts.js";
 import { AudioEngine } from "./audio.js";
 import { RhythmGame } from "./game.js";
+import { CHARACTERS, getCharacter, preloadCharacter, LANE_TO_DIR } from "./characters.js";
 
 const screens = {
   title: document.getElementById("screen-title"),
+  chars: document.getElementById("screen-chars"),
   freeplay: document.getElementById("screen-freeplay"),
   options: document.getElementById("screen-options"),
   credits: document.getElementById("screen-credits"),
@@ -11,7 +13,7 @@ const screens = {
   results: document.getElementById("screen-results"),
 };
 
-const MENU_SCREENS = new Set(["title", "freeplay", "options", "credits", "results"]);
+const MENU_SCREENS = new Set(["title", "chars", "freeplay", "options", "credits", "results"]);
 
 const menuVideoWrap = document.getElementById("menu-video-wrap");
 const menuVideo = document.getElementById("menu-video");
@@ -24,6 +26,9 @@ const state = {
   screen: "title",
   menuIndex: 0,
   freeplayIndex: 0,
+  charIndex: 0,
+  selectedCharId: "koal",
+  charAssetsCache: {},
   currentSong: SONGS[0],
   options: {
     speed: 2.2,
@@ -45,9 +50,7 @@ function setMenuVideoActive(active) {
   menuVideo.loop = true;
   if (active) {
     const play = () => {
-      menuVideo.play().catch(() => {
-        /* autoplay blocked until gesture — retry on first click */
-      });
+      menuVideo.play().catch(() => {});
     };
     play();
   } else {
@@ -65,7 +68,9 @@ function ensureMenuVideoUnlocked() {
 }
 
 function show(name) {
-  Object.values(screens).forEach((el) => el.classList.remove("active"));
+  Object.values(screens).forEach((el) => {
+    if (el) el.classList.remove("active");
+  });
   screens[name].classList.add("active");
   state.screen = name;
   setMenuVideoActive(MENU_SCREENS.has(name));
@@ -75,12 +80,21 @@ function loadSettings() {
   try {
     const raw = localStorage.getItem("second-dibs-opts") || localStorage.getItem("stayed-gone-opts");
     if (raw) Object.assign(state.options, JSON.parse(raw));
+    const charId = localStorage.getItem("second-dibs-char");
+    if (charId && getCharacter(charId) && !getCharacter(charId).locked) {
+      state.selectedCharId = charId;
+      state.charIndex = Math.max(
+        0,
+        CHARACTERS.findIndex((c) => c.id === charId)
+      );
+    }
   } catch (_) {}
   applyOptionsToUI();
 }
 
 function saveSettings() {
   localStorage.setItem("second-dibs-opts", JSON.stringify(state.options));
+  localStorage.setItem("second-dibs-char", state.selectedCharId);
 }
 
 function applyOptionsToUI() {
@@ -129,7 +143,7 @@ function buildFreeplay() {
     li.addEventListener("click", () => {
       state.freeplayIndex = i;
       updateFreeplaySelection();
-      startSong(SONGS[i]);
+      openCharSelectThenPlay(SONGS[i]);
     });
     list.appendChild(li);
   });
@@ -144,6 +158,96 @@ function updateFreeplaySelection() {
 function updateTitleMenu() {
   const btns = [...document.querySelectorAll("#screen-title .menu-btn")];
   btns.forEach((b, i) => b.classList.toggle("selected", i === state.menuIndex));
+}
+
+function buildCharSelect() {
+  const row = document.getElementById("char-row");
+  row.innerHTML = "";
+  CHARACTERS.forEach((char, i) => {
+    const card = document.createElement("div");
+    card.className = "char-card" + (char.locked ? " locked" : "");
+    card.dataset.index = String(i);
+    card.setAttribute("role", "option");
+    if (char.select) {
+      card.innerHTML = `
+        <img src="${char.select}" alt="${char.name}" />
+        <div class="char-name" style="color:${char.color}">${char.name}</div>
+        <div class="char-role">${char.role}</div>
+      `;
+    } else {
+      card.innerHTML = `
+        <div class="char-placeholder">SOON</div>
+        <div class="char-name" style="color:${char.color}">${char.name}</div>
+        <div class="char-role">${char.role}</div>
+      `;
+    }
+    if (!char.locked) {
+      card.addEventListener("click", () => {
+        state.charIndex = i;
+        state.selectedCharId = char.id;
+        updateCharSelect();
+        saveSettings();
+      });
+    }
+    row.appendChild(card);
+  });
+  updateCharSelect();
+}
+
+function updateCharSelect() {
+  const char = CHARACTERS[state.charIndex] || CHARACTERS[0];
+  if (!char.locked) state.selectedCharId = char.id;
+  document.querySelectorAll(".char-card").forEach((c, i) => {
+    c.classList.toggle("selected", i === state.charIndex);
+  });
+  const preview = document.getElementById("char-preview");
+  const hint = document.getElementById("char-preview-hint");
+  if (char.select) {
+    preview.src = char.select;
+    preview.style.display = "";
+  } else {
+    preview.removeAttribute("src");
+    preview.style.display = "none";
+  }
+  hint.textContent = char.locked
+    ? `${char.name} · locked (art coming)`
+    : `${char.name} · press ← ↓ ↑ → to preview moves · Enter to play`;
+  previewCharPose(null);
+}
+
+/** Preview UDLR pose on character select using sheet crops */
+async function previewCharPose(dir) {
+  const char = getCharacter(state.selectedCharId);
+  const preview = document.getElementById("char-preview");
+  if (!char || char.locked) return;
+
+  if (!dir || !char.sheet) {
+    if (char.select) preview.src = char.select;
+    return;
+  }
+
+  let assets = state.charAssetsCache[char.id];
+  if (!assets) {
+    assets = await preloadCharacter(char);
+    state.charAssetsCache[char.id] = assets;
+  }
+  if (!assets.sheetImg || !char.sheet.frames[dir]) {
+    if (char.select) preview.src = char.select;
+    return;
+  }
+  const fr = char.sheet.frames[dir];
+  const c = document.createElement("canvas");
+  c.width = fr.sw;
+  c.height = fr.sh;
+  const ctx = c.getContext("2d");
+  ctx.drawImage(assets.sheetImg, fr.sx, fr.sy, fr.sw, fr.sh, 0, 0, fr.sw, fr.sh);
+  preview.src = c.toDataURL("image/png");
+}
+
+function openCharSelectThenPlay(song) {
+  state.pendingSong = song || SONGS[0];
+  buildCharSelect();
+  show("chars");
 }
 
 async function countdown() {
@@ -162,6 +266,16 @@ async function countdown() {
 
 async function startSong(song) {
   state.currentSong = song;
+  const char = getCharacter(state.selectedCharId);
+  let assets = state.charAssetsCache[char.id];
+  if (!assets) {
+    assets = await preloadCharacter(char);
+    state.charAssetsCache[char.id] = assets;
+  }
+
+  document.getElementById("hud-player-name").textContent = char.name;
+  document.getElementById("hud-player-role").textContent = char.role || "You";
+
   show("game");
   document.getElementById("pause-overlay").classList.add("hidden");
   game.setOptions({
@@ -170,6 +284,7 @@ async function startSong(song) {
     downscroll: state.options.downscroll,
     botplay: state.options.botplay,
   });
+  game.setCharacter(char, assets);
   game.load(song);
   game.onHud = (h) => {
     document.getElementById("score-line").textContent =
@@ -213,13 +328,11 @@ async function resumeGame() {
   await game.resume();
 }
 
-// Clicks + unlock muted autoplay after first gesture if needed
 document.body.addEventListener("click", (e) => {
   ensureMenuVideoUnlocked();
   const btn = e.target.closest("[data-action]");
   if (!btn) return;
-  const action = btn.dataset.action;
-  handleAction(action);
+  handleAction(btn.dataset.action);
 });
 
 document.body.addEventListener("keydown", () => ensureMenuVideoUnlocked(), { once: false });
@@ -227,8 +340,21 @@ document.body.addEventListener("keydown", () => ensureMenuVideoUnlocked(), { onc
 function handleAction(action) {
   switch (action) {
     case "play":
-      startSong(SONGS[0]);
+      openCharSelectThenPlay(SONGS[0]);
       break;
+    case "chars":
+      state.pendingSong = null;
+      buildCharSelect();
+      show("chars");
+      break;
+    case "confirm-char": {
+      const char = CHARACTERS[state.charIndex];
+      if (char?.locked) return;
+      state.selectedCharId = char.id;
+      saveSettings();
+      startSong(state.pendingSong || SONGS[0]);
+      break;
+    }
     case "freeplay":
       buildFreeplay();
       show("freeplay");
@@ -259,7 +385,21 @@ function handleAction(action) {
   }
 }
 
-// Keyboard navigation
+const KEY_TO_DIR = {
+  ArrowLeft: "left",
+  ArrowDown: "down",
+  ArrowUp: "up",
+  ArrowRight: "right",
+  a: "left",
+  s: "down",
+  w: "up",
+  d: "right",
+  A: "left",
+  S: "down",
+  W: "up",
+  D: "right",
+};
+
 window.addEventListener("keydown", (e) => {
   if (state.screen === "title") {
     const btns = [...document.querySelectorAll("#screen-title .menu-btn")];
@@ -272,6 +412,28 @@ window.addEventListener("keydown", (e) => {
     } else if (e.key === "Enter") {
       handleAction(btns[state.menuIndex].dataset.action);
     }
+  } else if (state.screen === "chars") {
+    // Arrow / WASD → swap preview pose (UDLR from moves sheet)
+    const dir = KEY_TO_DIR[e.key];
+    if (dir) {
+      previewCharPose(dir);
+      e.preventDefault();
+    } else if (e.key === "Enter") {
+      handleAction("confirm-char");
+    } else if (e.key === "Escape") {
+      show("title");
+    } else if (e.key === "Tab") {
+      // Cycle unlocked characters
+      e.preventDefault();
+      const unlocked = CHARACTERS.map((c, i) => ({ c, i })).filter((x) => !x.c.locked);
+      const idx = unlocked.findIndex((x) => x.i === state.charIndex);
+      const next = unlocked[(idx + 1) % unlocked.length];
+      if (next) {
+        state.charIndex = next.i;
+        updateCharSelect();
+        saveSettings();
+      }
+    }
   } else if (state.screen === "freeplay") {
     if (e.key === "ArrowDown" || e.key === "s") {
       state.freeplayIndex = (state.freeplayIndex + 1) % SONGS.length;
@@ -280,7 +442,7 @@ window.addEventListener("keydown", (e) => {
       state.freeplayIndex = (state.freeplayIndex - 1 + SONGS.length) % SONGS.length;
       updateFreeplaySelection();
     } else if (e.key === "Enter") {
-      startSong(SONGS[state.freeplayIndex]);
+      openCharSelectThenPlay(SONGS[state.freeplayIndex]);
     } else if (e.key === "Escape") {
       show("title");
     }
@@ -300,19 +462,27 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
+// Quiet unused
+void LANE_TO_DIR;
+void KEY_TO_DIR;
+
 loadSettings();
 wireOptions();
 updateTitleMenu();
 buildFreeplay();
+buildCharSelect();
 
-// Force mute + start looping menu BG on load
+// Preload Koal
+preloadCharacter(getCharacter("koal")).then((a) => {
+  state.charAssetsCache.koal = a;
+});
+
 if (menuVideo) {
   menuVideo.muted = true;
   menuVideo.defaultMuted = true;
   menuVideo.setAttribute("muted", "");
   menuVideo.volume = 0;
   menuVideo.loop = true;
-  // Some browsers still emit audio unless we hard-mute on load/metadata
   menuVideo.addEventListener("loadeddata", () => {
     menuVideo.muted = true;
     menuVideo.volume = 0;

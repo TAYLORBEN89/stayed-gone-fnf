@@ -32,17 +32,31 @@
   <!-- TITLE -->
   <section id="screen-title" class="screen active">
     <div class="title-glow">
-      <p class="eyebrow">RHYTHM DUEL · CHARACTER SELECT COMING</p>
+      <p class="eyebrow">RHYTHM DUEL</p>
       <h1 class="glitch" data-text="SECOND DIBS">SECOND DIBS</h1>
       <p class="subtitle">KAIN <span class="vs">VS</span> KROSS <span class="vs">VS</span> KOAL</p>
     </div>
     <nav class="menu" role="menu">
       <button class="menu-btn" data-action="play" role="menuitem">▶ STORY</button>
+      <button class="menu-btn" data-action="chars" role="menuitem">★ CHARACTERS</button>
       <button class="menu-btn" data-action="freeplay" role="menuitem">♪ FREEPLAY</button>
       <button class="menu-btn" data-action="options" role="menuitem">⚙ OPTIONS</button>
       <button class="menu-btn" data-action="credits" role="menuitem">★ CREDITS</button>
     </nav>
     <p class="hint">Arrow keys / WASD · Enter to select · Esc back</p>
+  </section>
+
+  <!-- CHARACTER SELECT -->
+  <section id="screen-chars" class="screen">
+    <h2 class="panel-title">CHARACTER SELECT</h2>
+    <div class="char-preview-wrap">
+      <img id="char-preview" alt="Selected character" src="assets/characters/koal/select.jpg" />
+      <p class="char-preview-hint" id="char-preview-hint">KOAL · press ←↓↑→ to preview moves</p>
+    </div>
+    <div class="char-row" id="char-row" role="listbox"></div>
+    <button class="menu-btn" data-action="confirm-char">▶ PLAY AS SELECTED</button>
+    <button class="menu-btn" data-action="back">← BACK</button>
+    <p class="hint">Click a fighter · ←↓↑→ preview moves · Enter play · Esc back</p>
   </section>
 
   <!-- FREEPLAY -->
@@ -97,10 +111,13 @@
 
   <!-- COUNTDOWN / GAME -->
   <section id="screen-game" class="screen">
+    <div id="game-char-layer" aria-hidden="true">
+      <canvas id="game-char-player" width="512" height="640"></canvas>
+    </div>
     <div id="hud">
       <div class="hud-side opponent">
-        <span class="name alastor">KROSS</span>
-        <span class="role">Challenger</span>
+        <span class="name alastor" id="hud-opp-name">KROSS</span>
+        <span class="role" id="hud-opp-role">Challenger</span>
       </div>
       <div class="hud-center">
         <div id="health-bar"><div id="health-fill"></div></div>
@@ -108,8 +125,8 @@
         <div id="judgement"></div>
       </div>
       <div class="hud-side player">
-        <span class="name vox">KAIN</span>
-        <span class="role">You</span>
+        <span class="name vox" id="hud-player-name">KOAL</span>
+        <span class="role" id="hud-player-role">You</span>
       </div>
     </div>
     <canvas id="game-canvas" width="1280" height="720"></canvas>
