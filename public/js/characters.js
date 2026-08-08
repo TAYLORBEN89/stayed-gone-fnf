@@ -1,6 +1,5 @@
 /**
- * Second Dibs roster.
- * Koal + Kross playable; Kain locked until art arrives.
+ * Second Dibs roster — Koal, Kross, Kain all playable.
  */
 
 /** FNF lane index → direction name */
@@ -38,6 +37,22 @@ const KROSS_SHEET = {
   },
 };
 
+/**
+ * Kain_02.jpg (1328×1488) — 2×2 grid:
+ *   TL = up · TR = down · BL = left · BR = right
+ */
+const KAIN_SHEET = {
+  src: "assets/characters/kain/moves.jpg",
+  width: 1328,
+  height: 1488,
+  frames: {
+    up: { sx: 20, sy: 20, sw: 640, sh: 720 },
+    down: { sx: 680, sy: 20, sw: 640, sh: 720 },
+    left: { sx: 20, sy: 760, sw: 640, sh: 720 },
+    right: { sx: 680, sy: 760, sw: 640, sh: 720 },
+  },
+};
+
 export const CHARACTERS = [
   {
     id: "koal",
@@ -58,11 +73,10 @@ export const CHARACTERS = [
   {
     id: "kain",
     name: "KAIN",
-    role: "Coming soon",
-    select: null,
-    sheet: null,
+    role: "Stevie Ray vibes",
+    select: "assets/characters/kain/select.jpg",
+    sheet: KAIN_SHEET,
     color: "#00e5ff",
-    locked: true,
   },
 ];
 

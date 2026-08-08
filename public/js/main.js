@@ -472,8 +472,8 @@ updateTitleMenu();
 buildFreeplay();
 buildCharSelect();
 
-// Preload playable roster
-["koal", "kross"].forEach((id) => {
+// Preload full roster
+["koal", "kross", "kain"].forEach((id) => {
   preloadCharacter(getCharacter(id)).then((a) => {
     state.charAssetsCache[id] = a;
   });
