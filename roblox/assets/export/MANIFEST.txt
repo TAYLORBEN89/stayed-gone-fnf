@@ -1,0 +1,14 @@
+Cash Empire — Blender-generated props
+========================================
+Penny.fbx
+GoldDoubloon.fbx
+PlatinumCoin.fbx
+DollarStack.fbx
+PlatinumBar.fbx
+Bitcoin.fbx
+DragonEgg.fbx
+StarFragment.fbx
+PiggyBank.fbx
+
+Studio: View → Asset Manager → Bulk Import → select these FBX files
+Or Blender Roblox plugin: open each / import FBX then Upload

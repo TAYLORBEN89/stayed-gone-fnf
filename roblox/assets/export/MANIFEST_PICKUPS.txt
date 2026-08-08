@@ -1,0 +1,31 @@
+Cash Empire pickup props
+Penny.fbx
+DollarBill.fbx
+FiveSpot.fbx
+TwentyStack.fbx
+CoinJar.fbx
+ZombieTooth.fbx
+ChuckEToken.fbx
+MonopolyPiece.fbx
+PrizeTicket.fbx
+GoldDoubloon.fbx
+BlackPearl.fbx
+RomanDenarius.fbx
+GoldenLaurel.fbx
+PlatinumCoin.fbx
+PlatinumBar.fbx
+VaultKeycard.fbx
+Bitcoin.fbx
+Ethereum.fbx
+JPEGDuck.fbx
+StarFragment.fbx
+NebulaShard.fbx
+DragonEgg.fbx
+InfinityCent.fbx
+PiggyBank.fbx
+OakTree.fbx
+GrassClump.fbx
+Bush.fbx
+PineTree.fbx
+
+Showcase: C:\Users\btayl\vox vr alistor\roblox\assets\blender\CashEmpire_Pickups_Showcase.blend

@@ -17,3 +17,10 @@ roblox/*.rbxlx
 roblox/*.rbxm
 roblox/*.rbxmx
 
+# Blender binaries / large exports (keep scripts)
+roblox/assets/export/*.fbx
+roblox/assets/export/*.obj
+roblox/assets/export/*.mtl
+roblox/assets/blender/*.blend1
+
+

@@ -1,7 +1,7 @@
 {
-  "name": "stayed-gone-fnf",
-  "version": "1.0.0",
-  "description": "Stayed Gone — Vox vs Alastor FNF-style rhythm game (browser)",
+  "name": "second-dibs-fnf",
+  "version": "1.1.0",
+  "description": "Second Dibs — Kain vs Kross vs Koal FNF-style rhythm game (browser)",
   "private": true,
   "scripts": {
     "dev": "npx --yes serve public -l 3000",

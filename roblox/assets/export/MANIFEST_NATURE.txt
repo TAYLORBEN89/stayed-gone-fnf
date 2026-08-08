@@ -1,0 +1,9 @@
+Cash Empire nature props
+GrassClump.fbx
+GrassClumpDense.fbx
+OakTree.fbx
+OakTreeLarge.fbx
+PineTree.fbx
+Bush.fbx
+
+Import via Studio Asset Manager → Bulk Import

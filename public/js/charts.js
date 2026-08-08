@@ -1,4 +1,4 @@
-/** Song charts for Stayed Gone FNF-style build */
+/** Song charts for Second Dibs — Kain vs Kross vs Koal */
 
 function makePattern(startMs, bpm, bars, pattern) {
   const beat = 60000 / bpm;
@@ -17,13 +17,13 @@ function makePattern(startMs, bpm, bars, pattern) {
   return notes;
 }
 
-/** Generate a full dual-side chart for Stayed Gone demo */
+/** Generate a full dual-side chart for Second Dibs demo */
 export function generateStayedGoneChart() {
   const bpm = 148;
   const beat = 60000 / bpm;
   const notes = [];
 
-  // Intro — sparse Alastor (opponent, lanes 0-3) then Vox answers (player 4-7)
+  // Intro — Kross (opponent, lanes 0-3) then Kain answers (player 4-7)
   // We use 8 lanes: 0-3 opponent, 4-7 player
   const intro = [
     { beat: 0, lane: 0, side: "opponent" },
@@ -107,9 +107,9 @@ export function generateStayedGoneChart() {
   notes.sort((a, b) => a.time - b.time || a.lane - b.lane);
 
   return {
-    id: "stayed-gone",
-    name: "Stayed Gone",
-    artist: "Demo Chart · Vox vs Alastor",
+    id: "second-dibs",
+    name: "Second Dibs",
+    artist: "Demo Chart · Kain vs Kross vs Koal",
     bpm,
     speed: 2.2,
     duration: Math.ceil(t + 2000),

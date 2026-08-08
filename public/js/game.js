@@ -395,9 +395,9 @@ export class RhythmGame {
     ctx.font = "12px 'Share Tech Mono', monospace";
     ctx.fillStyle = "rgba(255,80,80,0.7)";
     ctx.textAlign = "center";
-    ctx.fillText("ALASTOR", w * 0.28, 48);
+    ctx.fillText("KROSS", w * 0.28, 48);
     ctx.fillStyle = "rgba(0,220,255,0.7)";
-    ctx.fillText("VOX  ·  ←↓↑→ or WASD", w * 0.72, 48);
+    ctx.fillText("KAIN  ·  ←↓↑→ or WASD", w * 0.72, 48);
   }
 
   _roundRect(x, y, w, h, r) {

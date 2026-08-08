@@ -1,11 +1,5 @@
--- Shared module (replicated to client + server)
-local Hello = {}
-
-Hello.GameName = "Stayed Gone"
-Hello.Tagline = "Vox vs Alastor"
-
-function Hello.greet(name: string): string
-	return `[{Hello.GameName}] Welcome, {name}!`
-end
-
-return Hello
+return {
+	GameName = "Cash Empire",
+	Tagline = "Stack it to the sky. Bank it. Flex rarer.",
+	Version = "2.0.0",
+}

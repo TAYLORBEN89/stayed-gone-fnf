@@ -1,40 +1,43 @@
-# Stayed Gone — Roblox (Rojo)
+# 👑 Cash Empire (Roblox)
 
-Sync Luau source from this folder into **Roblox Studio** with [Rojo](https://rojo.space/).
+**The market-style money stacker:** collect absurd currencies → stack sky-high → bank → buy pets/upgrades → **rebirth** for permanent multi → ride world events.
 
-## One-time setup
+## Loop
 
-1. **Rojo CLI** — already installed (`rojo --version` → 7.6.1)
-2. **Rojo plugin** — `Rojo.rbxm` was placed in  
-   `%LOCALAPPDATA%\Roblox\Plugins\`  
-   Restart Studio if it was already open.
-3. In Studio: open the **Plugins** tab → **Rojo** → **Connect** (default `localhost:34872`)
+1. Run through zones collecting pennies → crypto → dragon eggs  
+2. Stack grows on your back (slower = risk)  
+3. **Green MAIN BANK** deposits (combo + pet + rebirth multi apply)  
+4. **Orange shop** — capacity, magnets, luck, trails, titles, pets  
+5. **Blue fusion lab** — craft better banked currencies  
+6. **Purple rebirth** — wipe cash, keep bank/pets/upgrades, +multi forever  
+7. Random **events** (Gold Rush, Meme Mania, Dragon Watch)
 
-## Daily workflow
+## Zones (soft-gated)
 
-```powershell
-cd roblox
-rojo serve
+| Zone | Unlock idea |
+|------|-------------|
+| Suburbs | Free |
+| Arcade / Harbor / Ruins | Cash thresholds |
+| Vault / Crypto / Cosmos | High cash or rebirths |
+| ??? Chamber | Endgame / secret infinity cents |
+
+## Controls
+
+| Input | Action |
+|-------|--------|
+| Walk into orbs | Pickup + combo |
+| **E** / green pad | Deposit |
+| Orange pad | Shop |
+| Blue pad | Fusion |
+| Purple pad / **R** | Rebirth |
+| **X** | Close menus |
+
+## Rojo
+
+```bat
+start-rojo.bat
 ```
 
-Then in Studio: **Plugins → Rojo → Connect**.
+Studio → Plugins → Rojo → **127.0.0.1:34872** → Connect → **Play**
 
-| Edit on disk | Appears in Studio |
-|--------------|-------------------|
-| `src/shared/` | `ReplicatedStorage.Shared` |
-| `src/server/` | `ServerScriptService.Server` |
-| `src/client/` | `StarterPlayer.StarterPlayerScripts.Client` |
-
-## Build a place file (optional)
-
-```powershell
-rojo build -o StayedGone.rbxlx
-```
-
-Open the `.rbxlx` in Studio, then Connect for live sync.
-
-## Notes
-
-- Keep Studio open while `rojo serve` is running.
-- If Connect fails: confirm serve is running, port `34872`, and the plugin is enabled.
-- This Roblox tree is separate from the web FNF game in `/public`.
+Enable **Studio Access to API Services** for DataStore saves (Game Settings → Security).

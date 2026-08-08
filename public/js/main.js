@@ -73,14 +73,14 @@ function show(name) {
 
 function loadSettings() {
   try {
-    const raw = localStorage.getItem("stayed-gone-opts");
+    const raw = localStorage.getItem("second-dibs-opts") || localStorage.getItem("stayed-gone-opts");
     if (raw) Object.assign(state.options, JSON.parse(raw));
   } catch (_) {}
   applyOptionsToUI();
 }
 
 function saveSettings() {
-  localStorage.setItem("stayed-gone-opts", JSON.stringify(state.options));
+  localStorage.setItem("second-dibs-opts", JSON.stringify(state.options));
 }
 
 function applyOptionsToUI() {
@@ -190,7 +190,7 @@ async function startSong(song) {
 function showResults(result) {
   show("results");
   document.getElementById("results-title").textContent = result.won
-    ? "YOU STAYED GONE"
+    ? "SECOND DIBS — YOU WIN"
     : "SIGNAL LOST";
   document.getElementById("results-body").innerHTML = `
     <div class="grade">${result.grade}</div>

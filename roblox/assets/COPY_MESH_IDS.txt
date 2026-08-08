@@ -1,0 +1,19 @@
+ONE STEP — paste this into Studio Command Bar (bottom of Studio) and press Enter:
+
+================================================================
+for _,d in ipairs({workspace,game:GetService("ServerStorage"),game:GetService("ReplicatedStorage"),game:GetService("Lighting")}) do for _,v in ipairs(d:GetDescendants()) do if v:IsA("MeshPart") and v.MeshId~="" and not string.find(v.MeshId,"123456") then print(v.Name.." = "..v.MeshId) end end end
+================================================================
+
+Then open View → Output, copy ALL the lines like:
+  Penny = rbxassetid://1234567890
+  DragonEgg = rbxassetid://...
+
+Paste that list back in this chat. I will wire MeshAssets.luau for you.
+
+If nothing prints:
+1. Your FBX imported into Inventory but were NOT inserted into the place
+2. Do File → Import 3D → pick Penny.fbx → Import (mesh must appear in Workspace)
+3. Run the command again
+
+How to open Command Bar: View → Command Bar  (or Ctrl+`)
+How to open Output: View → Output
