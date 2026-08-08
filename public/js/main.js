@@ -17,6 +17,7 @@ const MENU_SCREENS = new Set(["title", "chars", "freeplay", "options", "credits"
 
 const menuVideoWrap = document.getElementById("menu-video-wrap");
 const menuVideo = document.getElementById("menu-video");
+const menuMusic = document.getElementById("menu-music");
 
 const audio = new AudioEngine();
 const canvas = document.getElementById("game-canvas");
@@ -34,36 +35,59 @@ const state = {
     speed: 1.0,
     offset: 0,
     volume: 0.7,
+    volumeMenu: 0.55,
     downscroll: false,
     botplay: false,
   },
 };
 
-/** Mute + loop menu BG; play on menu screens, pause/hide in gameplay */
+function applyMenuMusicVolume() {
+  if (!menuMusic) return;
+  const v = state.options.volumeMenu != null ? state.options.volumeMenu : state.options.volume * 0.75;
+  menuMusic.volume = Math.max(0, Math.min(1, v));
+}
+
+/** Mute + loop menu BG video; play menu music on menu screens */
 function setMenuVideoActive(active) {
   document.body.classList.toggle("menu-bg-on", active);
   menuVideoWrap.classList.toggle("hidden", !active);
-  if (!menuVideo) return;
-  menuVideo.muted = true;
-  menuVideo.defaultMuted = true;
-  menuVideo.volume = 0;
-  menuVideo.loop = true;
-  if (active) {
-    const play = () => {
+  if (menuVideo) {
+    menuVideo.muted = true;
+    menuVideo.defaultMuted = true;
+    menuVideo.volume = 0;
+    menuVideo.loop = true;
+    if (active) {
       menuVideo.play().catch(() => {});
-    };
-    play();
-  } else {
-    menuVideo.pause();
+    } else {
+      menuVideo.pause();
+    }
+  }
+  // Menu BGM (My Song 4)
+  if (menuMusic) {
+    menuMusic.loop = true;
+    applyMenuMusicVolume();
+    if (active) {
+      const p = menuMusic.play();
+      if (p && p.catch) p.catch(() => {});
+    } else {
+      menuMusic.pause();
+    }
   }
 }
 
 function ensureMenuVideoUnlocked() {
-  if (!menuVideo) return;
-  menuVideo.muted = true;
-  menuVideo.volume = 0;
-  if (MENU_SCREENS.has(state.screen) && menuVideo.paused) {
-    menuVideo.play().catch(() => {});
+  if (menuVideo) {
+    menuVideo.muted = true;
+    menuVideo.volume = 0;
+    if (MENU_SCREENS.has(state.screen) && menuVideo.paused) {
+      menuVideo.play().catch(() => {});
+    }
+  }
+  if (menuMusic && MENU_SCREENS.has(state.screen)) {
+    applyMenuMusicVolume();
+    if (menuMusic.paused) {
+      menuMusic.play().catch(() => {});
+    }
   }
 }
 
@@ -142,7 +166,15 @@ function wireOptions() {
   };
   bind("opt-speed", "speed", parseFloat, "opt-speed-val", (v) => v.toFixed(1));
   bind("opt-offset", "offset", (v) => parseInt(v, 10), "opt-offset-val", String);
-  bind("opt-volume", "volume", parseFloat, "opt-volume-val", (v) => Math.round(v * 100) + "%");
+  bind("opt-volume", "volume", parseFloat, "opt-volume-val", (v) => {
+    applyMenuMusicVolume();
+    return Math.round(v * 100) + "%";
+  });
+  // Keep menu music in sync with game volume slider
+  document.getElementById("opt-volume").addEventListener("input", () => {
+    state.options.volumeMenu = state.options.volume * 0.8;
+    applyMenuMusicVolume();
+  });
   document.getElementById("opt-downscroll").addEventListener("change", (e) => {
     state.options.downscroll = e.target.checked;
     saveSettings();
@@ -574,14 +606,20 @@ if (menuVideo) {
     menuVideo.volume = 0;
   });
 }
+if (menuMusic) {
+  menuMusic.loop = true;
+  applyMenuMusicVolume();
+}
 setMenuVideoActive(true);
 
-// First tap unlocks audio (iOS) + menu video
-document.body.addEventListener(
-  "touchstart",
-  () => {
-    ensureMenuVideoUnlocked();
-    audio.ensure().catch(() => {});
-  },
-  { once: true, passive: true }
-);
+// First tap unlocks audio (iOS) + menu video + menu music
+const unlockAll = () => {
+  ensureMenuVideoUnlocked();
+  audio.ensure().catch(() => {});
+  if (menuMusic && MENU_SCREENS.has(state.screen)) {
+    applyMenuMusicVolume();
+    menuMusic.play().catch(() => {});
+  }
+};
+document.body.addEventListener("touchstart", unlockAll, { once: true, passive: true });
+document.body.addEventListener("click", unlockAll, { once: true });

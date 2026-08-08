@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <!-- Looping menu BG (muted) — hidden during gameplay -->
+  <!-- Looping menu BG video (muted) + separate menu music -->
   <div id="menu-video-wrap" aria-hidden="true">
     <video
       id="menu-video"
@@ -28,6 +28,13 @@
     ></video>
     <div id="menu-video-dim"></div>
   </div>
+  <audio
+    id="menu-music"
+    src="assets/audio/menu.m4a"
+    loop
+    preload="auto"
+    playsinline
+  ></audio>
 
   <div id="crt" aria-hidden="true"></div>
   <div id="scanlines" aria-hidden="true"></div>
