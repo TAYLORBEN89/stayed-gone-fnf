@@ -31,7 +31,7 @@ const state = {
   charAssetsCache: {},
   currentSong: SONGS[0],
   options: {
-    speed: 2.2,
+    speed: 1.0,
     offset: 0,
     volume: 0.7,
     downscroll: false,
@@ -89,7 +89,14 @@ function show(name) {
 function loadSettings() {
   try {
     const raw = localStorage.getItem("second-dibs-opts") || localStorage.getItem("stayed-gone-opts");
-    if (raw) Object.assign(state.options, JSON.parse(raw));
+    if (raw) {
+      const saved = JSON.parse(raw);
+      Object.assign(state.options, saved);
+      // One-time migrate: old default 2.2 felt too fast — clamp down if still on old default
+      if (saved.speed == null || saved.speed >= 2.0) {
+        state.options.speed = 1.0;
+      }
+    }
     const charId = localStorage.getItem("second-dibs-char");
     if (charId && getCharacter(charId) && !getCharacter(charId).locked) {
       state.selectedCharId = charId;
@@ -99,7 +106,10 @@ function loadSettings() {
       );
     }
   } catch (_) {}
+  // Keep speed in valid range
+  state.options.speed = Math.min(3.5, Math.max(0.5, state.options.speed || 1.0));
   applyOptionsToUI();
+  saveSettings();
 }
 
 function saveSettings() {

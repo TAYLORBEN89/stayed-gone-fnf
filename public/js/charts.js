@@ -111,7 +111,7 @@ export function generateStayedGoneChart() {
     name: "Second Dibs",
     artist: "Demo Chart · Kain vs Kross vs Koal",
     bpm,
-    speed: 2.2,
+    speed: 1.0,
     duration: Math.ceil(t + 2000),
     notes,
   };
@@ -144,7 +144,7 @@ export function generateTutorialChart() {
     name: "Static Signal (Tutorial)",
     artist: "Practice",
     bpm,
-    speed: 1.8,
+    speed: 0.9,
     duration: Math.ceil(t + 32 * beat + 2000),
     notes,
   };

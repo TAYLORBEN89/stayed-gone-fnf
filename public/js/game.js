@@ -31,7 +31,7 @@ export class RhythmGame {
     this.audio = audio;
     this.chart = null;
     this.options = {
-      speed: 2.2,
+      speed: 1.0,
       offset: 0,
       downscroll: false,
       botplay: false,
