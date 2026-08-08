@@ -472,9 +472,11 @@ updateTitleMenu();
 buildFreeplay();
 buildCharSelect();
 
-// Preload Koal
-preloadCharacter(getCharacter("koal")).then((a) => {
-  state.charAssetsCache.koal = a;
+// Preload playable roster
+["koal", "kross"].forEach((id) => {
+  preloadCharacter(getCharacter(id)).then((a) => {
+    state.charAssetsCache[id] = a;
+  });
 });
 
 if (menuVideo) {

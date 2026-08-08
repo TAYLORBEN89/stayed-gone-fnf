@@ -1,14 +1,13 @@
 /**
  * Second Dibs roster.
- * Koal is the first playable character.
- * moves sheet: diamond layout — left / up / right / down poses.
+ * Koal + Kross playable; Kain locked until art arrives.
  */
 
 /** FNF lane index → direction name */
 export const LANE_TO_DIR = ["left", "down", "up", "right"];
 
 /**
- * Crop rects for Koal_02.jpg (1792×1008), diamond sheet:
+ * Koal_02.jpg (1792×1008) — diamond sheet:
  *   top = up · bottom = down · left = left · right = right
  */
 const KOAL_SHEET = {
@@ -16,11 +15,26 @@ const KOAL_SHEET = {
   width: 1792,
   height: 1008,
   frames: {
-    // tuned for the diamond layout on black bg
     left: { sx: 20, sy: 160, sw: 520, sh: 680 },
     up: { sx: 600, sy: 10, sw: 580, sh: 500 },
     down: { sx: 600, sy: 500, sw: 580, sh: 500 },
     right: { sx: 1240, sy: 160, sw: 530, sh: 680 },
+  },
+};
+
+/**
+ * Kross_02.jpg (1200×1600) — 2×2 grid:
+ *   TL = left · TR = right · BL = down · BR = up
+ */
+const KROSS_SHEET = {
+  src: "assets/characters/kross/moves.jpg",
+  width: 1200,
+  height: 1600,
+  frames: {
+    left: { sx: 20, sy: 20, sw: 560, sh: 760 },
+    right: { sx: 620, sy: 20, sw: 560, sh: 760 },
+    down: { sx: 20, sy: 820, sw: 560, sh: 760 },
+    up: { sx: 620, sy: 820, sw: 560, sh: 760 },
   },
 };
 
@@ -33,7 +47,14 @@ export const CHARACTERS = [
     sheet: KOAL_SHEET,
     color: "#ff6b35",
   },
-  // Placeholders until art is provided
+  {
+    id: "kross",
+    name: "KROSS",
+    role: "Point & laugh",
+    select: "assets/characters/kross/select.jpg",
+    sheet: KROSS_SHEET,
+    color: "#ffcc33",
+  },
   {
     id: "kain",
     name: "KAIN",
@@ -41,15 +62,6 @@ export const CHARACTERS = [
     select: null,
     sheet: null,
     color: "#00e5ff",
-    locked: true,
-  },
-  {
-    id: "kross",
-    name: "KROSS",
-    role: "Coming soon",
-    select: null,
-    sheet: null,
-    color: "#ff1a1a",
     locked: true,
   },
 ];
