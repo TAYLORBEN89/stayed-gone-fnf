@@ -277,16 +277,15 @@ async function countdown() {
 async function startSong(song) {
   state.currentSong = song;
   const char = getCharacter(state.selectedCharId);
-  let assets = state.charAssetsCache[char.id];
-  if (!assets) {
-    assets = await preloadCharacter(char);
-    state.charAssetsCache[char.id] = assets;
-  }
+  // Always (re)preload so sheet/select images are complete before play
+  const assets = await preloadCharacter(char);
+  state.charAssetsCache[char.id] = assets;
 
   document.getElementById("hud-player-name").textContent = char.name;
   document.getElementById("hud-player-role").textContent = char.role || "You";
 
   show("game");
+  detectMobile();
   document.getElementById("pause-overlay").classList.add("hidden");
   game.setOptions({
     speed: state.options.speed,

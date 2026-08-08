@@ -197,40 +197,65 @@ export class RhythmGame {
   }
 
   _drawCharacterPose(dir) {
+    // Keep offscreen canvas in sync (optional layer); main draw uses _paintCharacter
     const canvas = this._charCanvas;
     const ctx = this._charCtx;
     if (!canvas || !ctx) return;
     const w = canvas.width;
     const h = canvas.height;
     ctx.clearRect(0, 0, w, h);
+    this._paintCharacter(ctx, w, h, dir, 1);
+  }
 
+  /**
+   * Draw selected character (idle select art or UDLR sheet frame).
+   * Used both on the overlay canvas and the main game canvas (behind notes).
+   */
+  _paintCharacter(ctx, boxW, boxH, dir, alpha = 1) {
     const assets = this.charAssets;
     const char = this.character;
-    if (!char || !assets) return;
+    if (!char || !assets || !ctx) return;
 
-    // Prefer sheet frame for the pressed direction; idle uses select art
-    if (dir && assets.sheetImg && char.sheet?.frames?.[dir]) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+
+    let drew = false;
+    if (dir && assets.sheetImg?.complete && char.sheet?.frames?.[dir]) {
       const fr = char.sheet.frames[dir];
       const img = assets.sheetImg;
-      // fit frame into canvas preserving aspect
-      const scale = Math.min(w / fr.sw, h / fr.sh) * 0.95;
-      const dw = fr.sw * scale;
-      const dh = fr.sh * scale;
-      const dx = (w - dw) / 2;
-      const dy = h - dh;
-      ctx.drawImage(img, fr.sx, fr.sy, fr.sw, fr.sh, dx, dy, dw, dh);
-      return;
+      if (img.naturalWidth > 0) {
+        const scale = Math.min(boxW / fr.sw, boxH / fr.sh) * 0.95;
+        const dw = fr.sw * scale;
+        const dh = fr.sh * scale;
+        const dx = (boxW - dw) / 2;
+        const dy = boxH - dh;
+        try {
+          ctx.drawImage(img, fr.sx, fr.sy, fr.sw, fr.sh, dx, dy, dw, dh);
+          drew = true;
+        } catch (_) {}
+      }
     }
 
-    if (assets.selectImg) {
+    if (!drew && assets.selectImg?.complete && assets.selectImg.naturalWidth > 0) {
       const img = assets.selectImg;
-      const scale = Math.min(w / img.naturalWidth, h / img.naturalHeight) * 0.95;
+      const scale = Math.min(boxW / img.naturalWidth, boxH / img.naturalHeight) * 0.95;
       const dw = img.naturalWidth * scale;
       const dh = img.naturalHeight * scale;
-      const dx = (w - dw) / 2;
-      const dy = h - dh;
+      const dx = (boxW - dw) / 2;
+      const dy = boxH - dh;
       ctx.drawImage(img, dx, dy, dw, dh);
+      drew = true;
     }
+
+    // Fallback if images not ready yet
+    if (!drew && char.name) {
+      ctx.fillStyle = char.color || "#00e5ff";
+      ctx.font = `bold ${Math.min(boxW, boxH) * 0.12}px sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(char.name, boxW / 2, boxH * 0.55);
+    }
+    ctx.restore();
   }
 
   _tryHit(lane) {
@@ -422,26 +447,39 @@ export class RhythmGame {
       ctx.stroke();
     } else {
       const g = ctx.createLinearGradient(0, 0, 0, h);
-      g.addColorStop(0, "rgba(0,229,255,0.05)");
-      g.addColorStop(1, "transparent");
+      g.addColorStop(0, "rgba(0,229,255,0.06)");
+      g.addColorStop(0.5, "transparent");
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, w, h);
     }
 
-    // Leave room for mobile touch bar at bottom
-    const touchReserve = mobile ? Math.min(h * 0.2, 120) : 0;
+    // Touch bar reserve (mobile)
+    const touchReserve = mobile ? Math.min(h * 0.22, 130) : 0;
+
+    // Character BEHIND notes (on main canvas so it is never covered)
+    {
+      const charH = mobile ? Math.min(h * 0.36, 260) : h * 0.55;
+      const charW = mobile ? Math.min(w * 0.4, 200) : w * 0.32;
+      const charX = mobile ? w * 0.02 : w * 0.58;
+      const charY = mobile ? h - touchReserve - charH - 8 : h * 0.32;
+      ctx.save();
+      ctx.translate(charX, charY);
+      this._paintCharacter(ctx, charW, charH, this.poseDir, mobile ? 0.92 : 0.9);
+      ctx.restore();
+    }
+
     const noteSize = mobile
-      ? Math.min(72, w * 0.14)
+      ? Math.min(78, Math.max(50, w * 0.155))
       : Math.min(64, w * 0.055);
-    const gap = noteSize * (mobile ? 1.22 : 1.15);
+    const gap = noteSize * (mobile ? 1.28 : 1.15);
     let receptorY;
     if (this.options.downscroll) {
-      receptorY = mobile ? h * 0.14 : h * 0.18;
+      receptorY = mobile ? h * 0.12 : h * 0.18;
     } else {
-      receptorY = mobile ? h - touchReserve - noteSize * 1.1 : h * 0.82;
+      receptorY = mobile ? h - touchReserve - noteSize * 1.2 : h * 0.82;
     }
     const scrollDir = this.options.downscroll ? 1 : -1;
-    const pxPerMs = ((mobile ? 0.5 : 0.45) * this.options.speed * h) / 1000;
+    const pxPerMs = ((mobile ? 0.52 : 0.45) * this.options.speed * h) / 1000;
 
     const drawSide = (side, centerX, sizeMul = 1) => {
       const ns = noteSize * sizeMul;
@@ -454,8 +492,8 @@ export class RhythmGame {
         ctx.save();
         ctx.translate(x, receptorY);
         ctx.strokeStyle = LANE_COLORS[i];
-        ctx.fillStyle = held || flash > 0 ? LANE_COLORS[i] : "rgba(0,0,0,0.35)";
-        ctx.globalAlpha = held ? 0.85 : 0.35 + flash * 0.55;
+        ctx.fillStyle = held || flash > 0 ? LANE_COLORS[i] : "rgba(0,0,0,0.45)";
+        ctx.globalAlpha = held ? 0.9 : 0.4 + flash * 0.55;
         ctx.lineWidth = mobile ? 4 : 3;
         this._roundRect(-ns / 2, -ns / 2, ns, ns, 10);
         ctx.fill();
@@ -481,7 +519,7 @@ export class RhythmGame {
         ctx.translate(x, y);
         ctx.fillStyle = LANE_COLORS[n.lane];
         ctx.shadowColor = LANE_COLORS[n.lane];
-        ctx.shadowBlur = mobile ? 16 : 12;
+        ctx.shadowBlur = mobile ? 18 : 12;
         this._roundRect(-ns / 2, -ns / 2, ns, ns, 10);
         ctx.fill();
         ctx.shadowBlur = 0;
@@ -496,24 +534,23 @@ export class RhythmGame {
     };
 
     if (mobile) {
-      // Full-width player highway only — clearer on phones
+      // Single-player only — centered full-width highway
       drawSide("player", w * 0.5, 1);
-      // Tiny opponent strip (optional feedback)
-      if (w > 360) {
-        drawSide("opponent", w * 0.18, 0.42);
-      }
     } else {
       drawSide("opponent", w * 0.28);
       drawSide("player", w * 0.72);
     }
 
     // Labels
-    ctx.font = mobile ? "11px 'Share Tech Mono', monospace" : "12px 'Share Tech Mono', monospace";
+    ctx.font = "12px 'Share Tech Mono', monospace";
     ctx.textAlign = "center";
     const pName = this.character?.name || "KOAL";
     if (mobile) {
-      ctx.fillStyle = "rgba(0,220,255,0.85)";
-      ctx.fillText(pName, w * 0.5, mobile ? 36 + (window.visualViewport?.offsetTop || 0) * 0 : 40);
+      ctx.fillStyle = "rgba(255,255,255,0.92)";
+      ctx.fillText(pName, w * 0.5, 26);
+      ctx.fillStyle = "rgba(255,255,255,0.45)";
+      ctx.font = "10px 'Share Tech Mono', monospace";
+      ctx.fillText("tap pads below", w * 0.5, 42);
     } else {
       ctx.fillStyle = "rgba(255,80,80,0.7)";
       ctx.fillText("KROSS", w * 0.28, 48);
