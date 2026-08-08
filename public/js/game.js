@@ -127,7 +127,10 @@ export class RhythmGame {
     window.addEventListener("keydown", this._boundKeyDown);
     window.addEventListener("keyup", this._boundKeyUp);
     this._drawCharacterPose(null);
-    await this.audio.start(this.chart.bpm);
+    await this.audio.start({
+      bpm: this.chart.bpm,
+      audioUrl: this.chart.audioUrl || null,
+    });
     this._loop();
   }
 
@@ -151,17 +154,22 @@ export class RhythmGame {
   pause() {
     if (!this.running) return;
     this.paused = true;
-    this.audio.stop();
     this._pauseAt = this.songTime;
+    if (this.audio.pause) this.audio.pause();
+    else this.audio.stop();
   }
 
   async resume() {
     if (!this.running || !this.paused) return;
     this.paused = false;
-    await this.audio.start(this.chart.bpm);
-    // Re-align: audio restarts from 0; offset by previous pause point via fake start
-    this._resumeOffset = this._pauseAt || 0;
-    this.audio.startTime = this.audio.ctx.currentTime - this._resumeOffset / 1000;
+    if (this.audio.resume) {
+      await this.audio.resume();
+    } else {
+      await this.audio.start({
+        bpm: this.chart.bpm,
+        audioUrl: this.chart.audioUrl || null,
+      });
+    }
     this._loop();
   }
 
@@ -330,7 +338,12 @@ export class RhythmGame {
     this.songTime = this.audio.now();
     this._update();
     this._draw();
-    if (this.songTime >= this.chart.duration) {
+    // End when chart duration OR real track finishes
+    const trackEnded =
+      this.audio.useTrack &&
+      this.audio.track &&
+      this.audio.track.ended;
+    if (this.songTime >= this.chart.duration || trackEnded) {
       this._finish(true);
       return;
     }

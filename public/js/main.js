@@ -299,12 +299,21 @@ async function startSong(song) {
   document.getElementById("pause-overlay").classList.add("hidden");
   game.setOptions({
     speed: state.options.speed,
-    offset: state.options.offset,
+    // chart offsetHint + player option
+    offset: (state.options.offset || 0) + (song.offsetHint || 0),
     downscroll: state.options.downscroll,
     botplay: state.options.botplay,
   });
   game.setCharacter(char, assets);
   game.load(song);
+  // Warm-load music before countdown so first hit lands on beat
+  if (song.audioUrl) {
+    try {
+      await audio.loadTrack(song.audioUrl);
+    } catch (e) {
+      console.warn("Could not preload song audio", e);
+    }
+  }
   game.onHud = (h) => {
     document.getElementById("score-line").textContent =
       `Score: ${h.score} · Combo: ${h.combo} · Misses: ${h.misses}`;
