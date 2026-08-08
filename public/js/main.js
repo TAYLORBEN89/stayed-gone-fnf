@@ -67,6 +67,15 @@ function ensureMenuVideoUnlocked() {
   }
 }
 
+function detectMobile() {
+  const mobile =
+    window.matchMedia("(max-width: 900px)").matches ||
+    window.matchMedia("(pointer: coarse)").matches ||
+    /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  document.body.classList.toggle("is-mobile", mobile);
+  return mobile;
+}
+
 function show(name) {
   Object.values(screens).forEach((el) => {
     if (el) el.classList.remove("active");
@@ -74,6 +83,7 @@ function show(name) {
   screens[name].classList.add("active");
   state.screen = name;
   setMenuVideoActive(MENU_SCREENS.has(name));
+  detectMobile();
 }
 
 function loadSettings() {
@@ -337,8 +347,55 @@ document.body.addEventListener("click", (e) => {
 
 document.body.addEventListener("keydown", () => ensureMenuVideoUnlocked(), { once: false });
 
+function wireMobileControls() {
+  const root = document.getElementById("mobile-controls");
+  if (!root) return;
+
+  const bindPad = (btn) => {
+    const lane = parseInt(btn.dataset.lane, 10);
+    if (Number.isNaN(lane)) return;
+
+    const down = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      btn.classList.add("active");
+      ensureMenuVideoUnlocked();
+      audio.ensure().catch(() => {});
+      game.hitLane(lane);
+    };
+    const up = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      btn.classList.remove("active");
+      game.releaseLane(lane);
+    };
+
+    // Pointer events cover finger + mouse
+    btn.addEventListener("pointerdown", down);
+    btn.addEventListener("pointerup", up);
+    btn.addEventListener("pointerleave", up);
+    btn.addEventListener("pointercancel", up);
+    // Prevent context menu / scroll on long-press
+    btn.addEventListener("contextmenu", (e) => e.preventDefault());
+  };
+
+  root.querySelectorAll(".touch-pad").forEach(bindPad);
+
+  // Block multi-touch scrolling on the control bar
+  root.addEventListener(
+    "touchmove",
+    (e) => {
+      e.preventDefault();
+    },
+    { passive: false }
+  );
+}
+
 function handleAction(action) {
   switch (action) {
+    case "pause":
+      pauseGame();
+      break;
     case "play":
       openCharSelectThenPlay(SONGS[0]);
       break;
@@ -468,9 +525,15 @@ void KEY_TO_DIR;
 
 loadSettings();
 wireOptions();
+wireMobileControls();
 updateTitleMenu();
 buildFreeplay();
 buildCharSelect();
+detectMobile();
+window.addEventListener("resize", detectMobile);
+window.addEventListener("orientationchange", () => {
+  setTimeout(detectMobile, 150);
+});
 
 // Preload full roster
 ["koal", "kross", "kain"].forEach((id) => {
@@ -483,6 +546,9 @@ if (menuVideo) {
   menuVideo.muted = true;
   menuVideo.defaultMuted = true;
   menuVideo.setAttribute("muted", "");
+  menuVideo.playsInline = true;
+  menuVideo.setAttribute("playsinline", "");
+  menuVideo.setAttribute("webkit-playsinline", "");
   menuVideo.volume = 0;
   menuVideo.loop = true;
   menuVideo.addEventListener("loadeddata", () => {
@@ -491,3 +557,13 @@ if (menuVideo) {
   });
 }
 setMenuVideoActive(true);
+
+// First tap unlocks audio (iOS) + menu video
+document.body.addEventListener(
+  "touchstart",
+  () => {
+    ensureMenuVideoUnlocked();
+    audio.ensure().catch(() => {});
+  },
+  { once: true, passive: true }
+);

@@ -2,8 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#0a0a12" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="description" content="Second Dibs — Kain vs Kross vs Koal. Browser Friday Night Funkin'-style rhythm game." />
   <title>SECOND DIBS — Kain vs Kross vs Koal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -43,7 +46,8 @@
       <button class="menu-btn" data-action="options" role="menuitem">⚙ OPTIONS</button>
       <button class="menu-btn" data-action="credits" role="menuitem">★ CREDITS</button>
     </nav>
-    <p class="hint">Arrow keys / WASD · Enter to select · Esc back</p>
+    <p class="hint desktop-only">Arrow keys / WASD · Enter to select · Esc back</p>
+    <p class="hint mobile-only">Tap buttons · works great in landscape</p>
   </section>
 
   <!-- CHARACTER SELECT -->
@@ -130,6 +134,13 @@
       </div>
     </div>
     <canvas id="game-canvas" width="1280" height="720"></canvas>
+    <button type="button" id="btn-pause-mobile" class="mobile-only" data-action="pause" aria-label="Pause">❚❚</button>
+    <div id="mobile-controls" class="mobile-only" aria-label="Touch controls">
+      <button type="button" class="touch-pad" data-lane="0" style="--pad-color:#c44dff"><span>←</span></button>
+      <button type="button" class="touch-pad" data-lane="1" style="--pad-color:#4d9fff"><span>↓</span></button>
+      <button type="button" class="touch-pad" data-lane="2" style="--pad-color:#4dff7a"><span>↑</span></button>
+      <button type="button" class="touch-pad" data-lane="3" style="--pad-color:#ff4d6a"><span>→</span></button>
+    </div>
     <div id="countdown"></div>
     <div id="pause-overlay" class="hidden">
       <p>PAUSED</p>

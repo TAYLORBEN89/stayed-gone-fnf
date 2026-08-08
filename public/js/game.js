@@ -70,6 +70,14 @@ export class RhythmGame {
     window.addEventListener("resize", () => this._resize());
   }
 
+  isMobileLayout() {
+    return (
+      window.matchMedia("(max-width: 900px)").matches ||
+      window.matchMedia("(pointer: coarse)").matches ||
+      document.body.classList.contains("is-mobile")
+    );
+  }
+
   setCharacter(char, assets) {
     this.character = char;
     this.charAssets = assets || null;
@@ -118,8 +126,26 @@ export class RhythmGame {
     this.paused = false;
     window.addEventListener("keydown", this._boundKeyDown);
     window.addEventListener("keyup", this._boundKeyUp);
+    this._drawCharacterPose(null);
     await this.audio.start(this.chart.bpm);
     this._loop();
+  }
+
+  /** Public: hit a lane from keyboard or touch (0–3) */
+  hitLane(lane) {
+    if (!this.running || this.paused || lane < 0 || lane > 3) return;
+    this.held[lane] = true;
+    this.flash[lane] = 1;
+    this._setPose(LANE_TO_DIR[lane]);
+    if (!this.options.botplay) this._tryHit(lane);
+  }
+
+  releaseLane(lane) {
+    if (lane < 0 || lane > 3) return;
+    this.held[lane] = false;
+    if (!this.held.some(Boolean)) {
+      this.poseTimer = 0.12;
+    }
   }
 
   pause() {
@@ -154,20 +180,13 @@ export class RhythmGame {
     const lane = LANE_KEYS[e.key];
     if (lane === undefined) return;
     e.preventDefault();
-    this.held[lane] = true;
-    this.flash[lane] = 1;
-    this._setPose(LANE_TO_DIR[lane]);
-    if (!this.options.botplay) this._tryHit(lane);
+    this.hitLane(lane);
   }
 
   _keyUp(e) {
     const lane = LANE_KEYS[e.key];
     if (lane === undefined) return;
-    this.held[lane] = false;
-    // If no keys held, return to idle shortly
-    if (!this.held.some(Boolean)) {
-      this.poseTimer = 0.12;
-    }
+    this.releaseLane(lane);
   }
 
   _setPose(dir) {
@@ -380,55 +399,70 @@ export class RhythmGame {
   _draw() {
     const { ctx, w, h } = this;
     ctx.clearRect(0, 0, w, h);
+    const mobile = this.isMobileLayout();
 
     // Stage split glow
-    const g1 = ctx.createLinearGradient(0, 0, w / 2, 0);
-    g1.addColorStop(0, "rgba(255,26,26,0.06)");
-    g1.addColorStop(1, "transparent");
-    ctx.fillStyle = g1;
-    ctx.fillRect(0, 0, w / 2, h);
+    if (!mobile) {
+      const g1 = ctx.createLinearGradient(0, 0, w / 2, 0);
+      g1.addColorStop(0, "rgba(255,26,26,0.06)");
+      g1.addColorStop(1, "transparent");
+      ctx.fillStyle = g1;
+      ctx.fillRect(0, 0, w / 2, h);
 
-    const g2 = ctx.createLinearGradient(w, 0, w / 2, 0);
-    g2.addColorStop(0, "rgba(0,229,255,0.06)");
-    g2.addColorStop(1, "transparent");
-    ctx.fillStyle = g2;
-    ctx.fillRect(w / 2, 0, w / 2, h);
+      const g2 = ctx.createLinearGradient(w, 0, w / 2, 0);
+      g2.addColorStop(0, "rgba(0,229,255,0.06)");
+      g2.addColorStop(1, "transparent");
+      ctx.fillStyle = g2;
+      ctx.fillRect(w / 2, 0, w / 2, h);
 
-    // Center divider
-    ctx.strokeStyle = "rgba(255,255,255,0.08)";
-    ctx.beginPath();
-    ctx.moveTo(w / 2, 0);
-    ctx.lineTo(w / 2, h);
-    ctx.stroke();
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      ctx.beginPath();
+      ctx.moveTo(w / 2, 0);
+      ctx.lineTo(w / 2, h);
+      ctx.stroke();
+    } else {
+      const g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, "rgba(0,229,255,0.05)");
+      g.addColorStop(1, "transparent");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+    }
 
-    const noteSize = Math.min(64, w * 0.055);
-    const gap = noteSize * 1.15;
-    const receptorY = this.options.downscroll ? h * 0.18 : h * 0.82;
+    // Leave room for mobile touch bar at bottom
+    const touchReserve = mobile ? Math.min(h * 0.2, 120) : 0;
+    const noteSize = mobile
+      ? Math.min(72, w * 0.14)
+      : Math.min(64, w * 0.055);
+    const gap = noteSize * (mobile ? 1.22 : 1.15);
+    let receptorY;
+    if (this.options.downscroll) {
+      receptorY = mobile ? h * 0.14 : h * 0.18;
+    } else {
+      receptorY = mobile ? h - touchReserve - noteSize * 1.1 : h * 0.82;
+    }
     const scrollDir = this.options.downscroll ? 1 : -1;
-    const pxPerMs = (0.45 * this.options.speed * h) / 1000;
+    const pxPerMs = ((mobile ? 0.5 : 0.45) * this.options.speed * h) / 1000;
 
-    const drawSide = (side, centerX) => {
-      const baseX = centerX - (1.5 * gap);
-      // receptors
+    const drawSide = (side, centerX, sizeMul = 1) => {
+      const ns = noteSize * sizeMul;
+      const g = gap * sizeMul;
+      const baseX = centerX - 1.5 * g;
       for (let i = 0; i < 4; i++) {
-        const x = baseX + i * gap;
+        const x = baseX + i * g;
         const flash = side === "player" ? this.flash[i] : 0;
         const held = side === "player" && this.held[i];
         ctx.save();
         ctx.translate(x, receptorY);
         ctx.strokeStyle = LANE_COLORS[i];
-        ctx.fillStyle = held || flash > 0
-          ? LANE_COLORS[i]
-          : "rgba(0,0,0,0.35)";
+        ctx.fillStyle = held || flash > 0 ? LANE_COLORS[i] : "rgba(0,0,0,0.35)";
         ctx.globalAlpha = held ? 0.85 : 0.35 + flash * 0.55;
-        ctx.lineWidth = 3;
-        this._roundRect(-noteSize / 2, -noteSize / 2, noteSize, noteSize, 10);
+        ctx.lineWidth = mobile ? 4 : 3;
+        this._roundRect(-ns / 2, -ns / 2, ns, ns, 10);
         ctx.fill();
         ctx.globalAlpha = 1;
         ctx.stroke();
-        // arrow glyph
         ctx.fillStyle = held || flash > 0 ? "#0a0a12" : LANE_COLORS[i];
-        ctx.font = `bold ${noteSize * 0.45}px sans-serif`;
+        ctx.font = `bold ${ns * 0.45}px sans-serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         const arrows = ["←", "↓", "↑", "→"];
@@ -436,24 +470,23 @@ export class RhythmGame {
         ctx.restore();
       }
 
-      // notes
       const t = this.songTime + this.options.offset;
       for (const n of this.notes) {
         if (n.side !== side || n.hit || n.missed) continue;
         const dy = (n.time - t) * pxPerMs * scrollDir;
         const y = receptorY + dy;
-        if (y < -noteSize || y > h + noteSize) continue;
-        const x = baseX + n.lane * gap;
+        if (y < -ns || y > h + ns) continue;
+        const x = baseX + n.lane * g;
         ctx.save();
         ctx.translate(x, y);
         ctx.fillStyle = LANE_COLORS[n.lane];
         ctx.shadowColor = LANE_COLORS[n.lane];
-        ctx.shadowBlur = 12;
-        this._roundRect(-noteSize / 2, -noteSize / 2, noteSize, noteSize, 10);
+        ctx.shadowBlur = mobile ? 16 : 12;
+        this._roundRect(-ns / 2, -ns / 2, ns, ns, 10);
         ctx.fill();
         ctx.shadowBlur = 0;
         ctx.fillStyle = "#0a0a12";
-        ctx.font = `bold ${noteSize * 0.45}px sans-serif`;
+        ctx.font = `bold ${ns * 0.45}px sans-serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         const arrows = ["←", "↓", "↑", "→"];
@@ -462,18 +495,31 @@ export class RhythmGame {
       }
     };
 
-    // Opponent left, player right
-    drawSide("opponent", w * 0.28);
-    drawSide("player", w * 0.72);
+    if (mobile) {
+      // Full-width player highway only — clearer on phones
+      drawSide("player", w * 0.5, 1);
+      // Tiny opponent strip (optional feedback)
+      if (w > 360) {
+        drawSide("opponent", w * 0.18, 0.42);
+      }
+    } else {
+      drawSide("opponent", w * 0.28);
+      drawSide("player", w * 0.72);
+    }
 
     // Labels
-    ctx.font = "12px 'Share Tech Mono', monospace";
-    ctx.fillStyle = "rgba(255,80,80,0.7)";
+    ctx.font = mobile ? "11px 'Share Tech Mono', monospace" : "12px 'Share Tech Mono', monospace";
     ctx.textAlign = "center";
-    ctx.fillText("KROSS", w * 0.28, 48);
-    ctx.fillStyle = "rgba(0,220,255,0.7)";
     const pName = this.character?.name || "KOAL";
-    ctx.fillText(`${pName}  ·  ←↓↑→ or WASD`, w * 0.72, 48);
+    if (mobile) {
+      ctx.fillStyle = "rgba(0,220,255,0.85)";
+      ctx.fillText(pName, w * 0.5, mobile ? 36 + (window.visualViewport?.offsetTop || 0) * 0 : 40);
+    } else {
+      ctx.fillStyle = "rgba(255,80,80,0.7)";
+      ctx.fillText("KROSS", w * 0.28, 48);
+      ctx.fillStyle = "rgba(0,220,255,0.7)";
+      ctx.fillText(`${pName}  ·  ←↓↑→ or WASD`, w * 0.72, 48);
+    }
   }
 
   _roundRect(x, y, w, h, r) {
